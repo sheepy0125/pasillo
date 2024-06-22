@@ -2,35 +2,11 @@
 
 #![no_std]
 #![no_main]
-#![feature(abi_avr_interrupt)]
-#![allow(incomplete_features)]
-#![feature(adt_const_params)]
-#![feature(trait_alias)]
 #![feature(never_type)]
-#![feature(stmt_expr_attributes)]
-#![feature(generic_const_exprs)]
 #![feature(strict_provenance)]
-#![feature(non_null_convenience)]
-#![feature(generic_nonzero)]
 #![feature(maybe_uninit_uninit_array)]
 #![feature(const_maybe_uninit_uninit_array)]
-#![feature(ptr_metadata)]
-#![feature(pattern)]
 #![feature(split_at_checked)]
-
-#[macro_use]
-extern crate require_unsafe_in_body;
-// #[macro_use]
-// extern crate packed_struct;
-
-use core::str::FromStr;
-
-use console::set_console;
-
-use debug::memory::add_marker;
-use types::{magic::Magic, string::PStackStr};
-
-use arduino_hal::{default_serial, delay_ms};
 
 pub mod console;
 pub mod debug;
@@ -39,6 +15,16 @@ pub mod shared;
 pub mod task;
 pub mod types;
 pub mod utils;
+
+use console::set_console;
+use core::str::FromStr;
+use debug::memory::add_marker;
+use types::{magic::Magic, string::PStackStr};
+
+use arduino_hal::{default_serial, delay_ms};
+
+#[macro_use]
+extern crate require_unsafe_in_body;
 
 #[arduino_hal::entry]
 fn main() -> ! {
