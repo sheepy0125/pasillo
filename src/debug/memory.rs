@@ -12,6 +12,9 @@ pub static mut MARKERS: PStackArrUnchecked<MarkerEntry, NUM_MARKERS> = PStackArr
 #[inline(never)]
 #[require_unsafe_in_body]
 pub unsafe fn add_marker(name: &'static str, ptr: *const u8) {
+    if unsafe { MARKERS.len } >= NUM_MARKERS {
+        return;
+    }
     unsafe { MARKERS.inner[MARKERS.len] = MaybeUninit::new((name, ptr)) };
     unsafe { MARKERS.len += 1 };
 }
