@@ -31,7 +31,12 @@ pub fn panic(info: &PanicInfo) -> ! {
         None => println!("Panicked! No information."),
     }
 
-    unsafe { HallwayMonitor::new().interactive() };
+    #[cfg(debug_assertions)]
+    unsafe {
+        HallwayMonitor::new().interactive()
+    };
+    #[cfg(not(debug_assertions))]
+    println!("Run with debug assertions to start Hallway Monitor.");
 
     let mut led = pins.d13.into_output();
     loop {

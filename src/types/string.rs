@@ -31,7 +31,8 @@ impl<const LEN: usize> core::ops::Deref for PStackStr<LEN> {
 }
 impl<const LEN: usize> FromStr for PStackStr<LEN> {
     type Err = !;
-    /// Wastefully converts from a string slice, copying the bytes up until `LEN`
+    /// Wastefully converts from a string slice, copying the bytes up until `LEN`.
+    /// Consider using [`PStr`] if the string won't be mutated.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut inner = [0; LEN];
 

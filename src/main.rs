@@ -16,10 +16,9 @@ pub mod task;
 pub mod types;
 pub mod utils;
 
-use console::set_console;
-use core::str::FromStr;
+use console::{println, set_console};
 use debug::memory::add_marker;
-use types::{magic::Magic, string::PStackStr};
+use types::{error::PError, magic::Magic, string::PStr};
 
 use arduino_hal::{default_serial, delay_ms};
 
@@ -31,13 +30,22 @@ fn main() -> ! {
     let peripherals = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(peripherals);
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
-    let mut monitor = debug::interactive::HallwayMonitor::new();
     set_console(serial);
 
-    let str = PStackStr::<32>::from_str("1234").unwrap();
+    unsafe {
+        add_marker(
+            "markers",
+            core::ptr::addr_of!(debug::memory::MARKERS) as *const u8,
+        )
+    }
+
+    let str = "1234";
     unsafe { add_marker("str", core::ptr::addr_of!(str) as *const u8) }
-    unsafe { monitor.interactive() };
-    assert!(Magic::is_magic(core::ptr::addr_of!(str)));
+    let error = PError::new(types::error::PErrorVariant::Unknown, PStr::from_str(str));
+    unsafe { add_marker("error", core::ptr::addr_of!(error) as *const u8) }
+
+    assert!(Magic::is_magic(core::ptr::addr_of!(error)));
+    println!("{}", error.context.as_ref());
 
     loop {
         delay_ms(1000);

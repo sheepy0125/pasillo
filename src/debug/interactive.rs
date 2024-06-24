@@ -31,12 +31,13 @@ fn helper_parse(input: &str, offset: usize, len: usize, radix: u32, default: usi
     usize::from_str_radix(parse, radix).unwrap_or(default)
 }
 
-/// An interactive "debugger" to examine memory.
+/// An interactive "debugger" to examine memory. Only available with debug assertions.
+#[cfg(debug_assertions)]
 #[derive(Default)]
 pub struct HallwayMonitor {
     pos: Option<*const u8>,
 }
-
+#[cfg(debug_assertions)]
 impl HallwayMonitor {
     pub fn new() -> Self {
         Self::default()
@@ -164,4 +165,15 @@ impl HallwayMonitor {
         println!("Pointing to marker `{}`!", name);
         self.pos = Some(pos);
     }
+}
+
+/// A dummy hallway monitor
+#[cfg(not(debug_assertions))]
+pub struct HallwayMonitor;
+#[cfg(not(debug_assertions))]
+impl HallwayMonitor {
+    pub fn new() -> Self {
+        Self {}
+    }
+    pub unsafe fn interactive(&mut self) {}
 }
