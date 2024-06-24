@@ -2,6 +2,7 @@
 
 use crate::types::array::PStackArrUnchecked;
 
+#[cfg(debug_assertions)]
 use core::mem::MaybeUninit;
 
 pub type MarkerEntry = (&'static str, *const u8);
@@ -15,7 +16,7 @@ pub static mut MARKERS: PStackArrUnchecked<MarkerEntry, NUM_MARKERS> = PStackArr
 #[inline(never)]
 #[require_unsafe_in_body]
 #[cfg(debug_assertions)]
-pub unsafe fn add_marker(name: &'static str, ptr: *const u8) {
+pub unsafe fn add_marker_manual(name: &'static str, ptr: *const u8) {
     if unsafe { MARKERS.len } >= NUM_MARKERS {
         return;
     }
@@ -24,4 +25,18 @@ pub unsafe fn add_marker(name: &'static str, ptr: *const u8) {
 }
 #[cfg(not(debug_assertions))]
 #[require_unsafe_in_body]
-pub unsafe fn add_marker(_: &'static str, _: *const u8) {}
+pub unsafe fn add_marker_manual(_: &'static str, _: *const u8) {}
+
+#[allow(unused_macros)]
+macro_rules! add_marker {
+    ($name:expr, $marker:expr) => {
+        unsafe {
+            crate::debug::memory::add_marker_manual(
+                $name,
+                core::ptr::addr_of!($marker) as *const u8,
+            )
+        }
+    };
+}
+#[allow(unused_imports)]
+pub(crate) use add_marker;

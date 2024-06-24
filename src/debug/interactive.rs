@@ -1,22 +1,27 @@
 //! An interactive "debugger" or "monitor," [`HallwayMonitor`], meant for debug scenarios to look
 //! through memory.
 
+use crate::debug::memory::add_marker;
+#[cfg(debug_assertions)]
 use crate::{
     console::{print, println, read_line},
     debug::memory::MARKERS,
     utils::decompose_uninit_array,
 };
 
+#[cfg(debug_assertions)]
 use avr_device::interrupt;
 
+#[cfg(debug_assertions)]
 const HELP_MESSAGE: &str = r#"Commands:
 help/h - <--
 exit/e - <--
 cli - [cl]ear [i]nterrupts
 ena - [ena]ble interrupts
 r<0xLEN> - [r]ead memory
-w<0bBYTE>(,<0bBYTE>...) - [w]rite bytes
-cw<0bBYTE>,0xLEN - [c]opy [w]rite
+w<0xBYTE>(,<0bBYTE>...) - [w]rite bytes
+cw<0xBYTE>,0xLEN - [c]opy [w]rite
+j - [j]ump to a function pointer
 a<0xLEN> - [a]dvance pointer
 b<0xLEN> - [b]acktrack pointer
 lm - [l]ist [m]arkers
@@ -24,6 +29,7 @@ m<name> - point to [m]arker
 g<0xPOS> - [g]oto position"#;
 
 /// Helper method to parse `input`[`offset`..`offset+len`] to a `usize` in `radix`
+#[cfg(debug_assertions)]
 fn helper_parse(input: &str, offset: usize, len: usize, radix: u32, default: usize) -> usize {
     let parse = input.split_at_checked(offset).unwrap_or(("", "")).1;
     let parse = parse.split_at_checked(len).unwrap_or((parse, "")).0;
@@ -54,6 +60,7 @@ impl HallwayMonitor {
             self.status();
             print!("> ");
             let input_stack_str = unsafe { read_line::<96>() };
+            add_marker!("input stack string", input_stack_str);
             let input = input_stack_str.as_ref().trim();
             match input {
                 _help if input.starts_with('h') => self.help(),
@@ -69,23 +76,38 @@ impl HallwayMonitor {
                 },
                 _write_memory if input.starts_with('w') => unsafe {
                     let original_pos = self.pos;
-                    let mut offset = 1;
+                    let mut offset = 0;
                     while offset < input.len() {
-                        self.write_memory(helper_parse(input, offset, 8, 2, 0));
+                        offset += 1;
+                        let len = match input_stack_str.inner[offset + 1] {
+                            b'x' => 4,
+                            _ => 2,
+                        };
+                        self.write_memory(helper_parse(input, offset, len, 16, 0));
                         self.advance(1);
-                        offset += 9;
+                        offset += len;
                     }
                     self.pos = original_pos;
                 },
                 _copy_write_memory if input.starts_with("cw") => unsafe {
                     let original_pos = self.pos;
-                    let byte = helper_parse(input, 2, 8, 2, 0);
-                    (0..helper_parse(input, 11, 8, 16, 1)).for_each(|_| {
+                    let len = match input_stack_str.inner[3] {
+                        b'x' => 4,
+                        _ => 2,
+                    };
+                    let byte = helper_parse(input, 2, len, 16, 0);
+                    (0..helper_parse(input, 1 + len + 2, 4, 16, 1)).for_each(|_| {
                         self.write_memory(byte);
                         self.advance(1);
                     });
                     self.pos = original_pos;
                 },
+                _jump if input.starts_with('j') => {
+                    if let Some(ptr) = self.pos {
+                        let trampoline: fn() -> ! = unsafe { core::mem::transmute(ptr) };
+                        trampoline();
+                    }
+                }
                 _forward if input.starts_with('a') => {
                     self.advance(helper_parse(input, 1, 8, 16, 1))
                 }

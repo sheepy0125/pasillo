@@ -2,6 +2,7 @@
 
 #![no_std]
 #![no_main]
+#![feature(panic_info_message)]
 #![feature(never_type)]
 #![feature(strict_provenance)]
 #![feature(maybe_uninit_uninit_array)]
@@ -16,38 +17,21 @@ pub mod task;
 pub mod types;
 pub mod utils;
 
-use console::{println, set_console};
-use debug::memory::add_marker;
-use types::{error::PError, magic::Magic, string::PStr};
+use console::set_console;
+use debug::memory::add_marker_manual;
 
-use arduino_hal::{default_serial, delay_ms};
+use arduino_hal::default_serial;
 
 #[macro_use]
 extern crate require_unsafe_in_body;
 
 #[arduino_hal::entry]
 fn main() -> ! {
-    let peripherals = arduino_hal::Peripherals::take().unwrap();
+    unsafe { add_marker_manual("main", __avr_device_rt_main as *const u8) };
+    let peripherals = unsafe { arduino_hal::Peripherals::steal() };
     let pins = arduino_hal::pins!(peripherals);
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
     set_console(serial);
 
-    unsafe {
-        add_marker(
-            "markers",
-            core::ptr::addr_of!(debug::memory::MARKERS) as *const u8,
-        )
-    }
-
-    let str = "1234";
-    unsafe { add_marker("str", core::ptr::addr_of!(str) as *const u8) }
-    let error = PError::new(types::error::PErrorVariant::Unknown, PStr::from_str(str));
-    unsafe { add_marker("error", core::ptr::addr_of!(error) as *const u8) }
-
-    assert!(Magic::is_magic(core::ptr::addr_of!(error)));
-    println!("{}", error.context.as_ref());
-
-    loop {
-        delay_ms(1000);
-    }
+    panic!("init ended");
 }

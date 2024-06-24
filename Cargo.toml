@@ -32,12 +32,15 @@ version = "=1.0.79"
 # Configure the build for minimal size - AVRs have very little program memory
 [profile.dev]
 panic = "abort"
+codegen-units = 5
 lto = true
-opt-level = "s"
+debug = true
+opt-level = "z"
 
 [profile.release]
 panic = "abort"
+debug-assertions = false
 codegen-units = 1
-debug = true
-lto = true
+debug = false
+lto = false
 opt-level = "s"
