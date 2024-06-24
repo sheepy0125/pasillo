@@ -11,7 +11,7 @@ pub struct PStackStr<const LEN: usize> {
     pub _magic: [u8; 4],
     pub inner: [u8; LEN],
     /// Not guaranteed to be updated if `inner` is modified
-    pub initial_len: usize,
+    pub len: usize,
 }
 
 unsafe impl<const STR_LEN: usize> Magic<4> for PStackStr<STR_LEN> {
@@ -20,7 +20,7 @@ unsafe impl<const STR_LEN: usize> Magic<4> for PStackStr<STR_LEN> {
 
 impl<const LEN: usize> AsRef<str> for PStackStr<LEN> {
     fn as_ref(&self) -> &str {
-        unsafe { core::str::from_utf8_unchecked(&self.inner).trim_end_matches(0x0 as char) }
+        unsafe { core::str::from_utf8_unchecked(&self.inner[..self.len]) }
     }
 }
 impl<const LEN: usize> core::ops::Deref for PStackStr<LEN> {
@@ -45,7 +45,7 @@ impl<const LEN: usize> FromStr for PStackStr<LEN> {
 
         Ok(Self {
             _magic: Self::MAGIC,
-            initial_len: len,
+            len,
             inner,
         })
     }

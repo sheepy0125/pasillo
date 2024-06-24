@@ -1,7 +1,6 @@
 //! An interactive "debugger" or "monitor," [`HallwayMonitor`], meant for debug scenarios to look
 //! through memory.
 
-use crate::debug::memory::add_marker;
 #[cfg(debug_assertions)]
 use crate::{
     console::{print, println, read_line},
@@ -60,7 +59,6 @@ impl HallwayMonitor {
             self.status();
             print!("> ");
             let input_stack_str = unsafe { read_line::<96>() };
-            add_marker!("input stack string", input_stack_str);
             let input = input_stack_str.as_ref().trim();
             match input {
                 _help if input.starts_with('h') => self.help(),

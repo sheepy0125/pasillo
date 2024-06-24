@@ -1,0 +1,6 @@
+{
+    "qemu-gdb-debug.executablePath": "pasillo.elf",
+    "qemu-gdb-debug.gdbPath": "avr-gdb",
+    "qemu-gdb-debug.serverAddress": ":1234",
+    "qemu-gdb-debug.startQemuCommand": "qemu-system-avr -S -gdb tcp::1234 -nographic -machine mega2560 -bios pasillo.elf",
+}

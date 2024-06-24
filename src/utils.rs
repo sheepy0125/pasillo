@@ -20,6 +20,7 @@ where
 
 /// Unsafely transmutes a [`MaybeUninit::uninit_array`], masking the [`MaybeUninit`]s.
 #[require_unsafe_in_body]
+#[inline(never)]
 pub unsafe fn decompose_uninit_array<T, const LEN: usize>(
     array: [MaybeUninit<T>; LEN],
 ) -> [T; LEN] {

@@ -90,6 +90,7 @@ pub unsafe fn read_line<const LEN: usize>() -> PStackStr<LEN> {
                 break;
             }
             *char = read;
+            ret.len += 1;
         }
     });
     ret
