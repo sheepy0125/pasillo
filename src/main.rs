@@ -11,19 +11,18 @@
 
 pub mod console;
 pub mod debug;
+pub mod driver;
+pub mod module;
 pub mod panic;
 pub mod shared;
 pub mod task;
 pub mod types;
 pub mod utils;
 
-use core::str::FromStr;
-
 use console::set_console;
-use debug::memory::{add_marker, add_marker_manual};
+use debug::memory::add_marker_manual;
 
 use arduino_hal::default_serial;
-use types::string::PStackStr;
 
 #[macro_use]
 extern crate require_unsafe_in_body;
@@ -36,8 +35,5 @@ fn main() -> ! {
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
     set_console(serial);
 
-    let s = PStackStr::<64>::from_str("hello!!!").unwrap();
-    add_marker!("s", s);
-
-    panic!("init ended");
+    loop {}
 }
