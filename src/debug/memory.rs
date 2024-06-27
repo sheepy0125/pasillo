@@ -30,6 +30,8 @@ pub unsafe fn add_marker_manual(_: &'static str, _: *const u8) {}
 #[allow(unused_macros)]
 macro_rules! add_marker {
     ($name:expr, $marker:expr) => {
+        #[allow(unused_unsafe)] // static mut
+        black_box(unsafe { $marker });
         unsafe {
             crate::debug::memory::add_marker_manual(
                 $name,

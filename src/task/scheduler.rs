@@ -1,16 +1,9 @@
-use crate::types::error::PError;
-
-/// A task's priority and niceness
 #[repr(C)]
-#[derive(Default)]
-pub enum Niceness {
-    #[default]
-    LowPriority = 0,
-    HighPriority = 1,
-    /// Wait for the task to return execution
-    Cooperative = 2,
-}
-
-pub trait KTask {
-    fn change_niceness(to: Niceness) -> Result<(), PError>;
+pub struct Task {
+    /// Pointer to the highest stack element
+    pub stack_top: *const u8,
+    pub stack_start: *const u8,
+    pub stack_end: *const u8,
+    /// Start run time in micros
+    pub start_runtime: u32,
 }

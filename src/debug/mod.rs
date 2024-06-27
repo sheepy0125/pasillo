@@ -1,4 +1,5 @@
 //! Debug utilities.
 
-pub mod interactive;
+pub mod hallway;
 pub mod memory;
+pub mod console;

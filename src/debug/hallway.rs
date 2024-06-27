@@ -1,31 +1,36 @@
 //! An interactive "debugger" or "monitor," [`HallwayMonitor`], meant for debug scenarios to look
 //! through memory.
 
+use crate::debug::console::helper_print;
 #[cfg(debug_assertions)]
 use crate::{
-    console::{print, println, read_line},
+    debug::console::{debug_print as print, debug_println as println, read_line},
     debug::memory::MARKERS,
     utils::decompose_uninit_array,
 };
 
 #[cfg(debug_assertions)]
 use avr_device::interrupt;
+use avr_progmem::progmem;
 
 #[cfg(debug_assertions)]
-const HELP_MESSAGE: &str = r#"Commands:
-help/h - <--
-exit/e - <--
-cli - [cl]ear [i]nterrupts
-ena - [ena]ble interrupts
-r<0xLEN> - [r]ead memory
-w<0xBYTE>(,<0bBYTE>...) - [w]rite bytes
-cw<0xBYTE>,0xLEN - [c]opy [w]rite
-j - [j]ump to a function pointer
-a<0xLEN> - [a]dvance pointer
-b<0xLEN> - [b]acktrack pointer
-lm - [l]ist [m]arkers
-m<name> - point to [m]arker
-g<0xPOS> - [g]oto position"#;
+progmem! {
+    static progmem string HELP_MESSAGE =
+    r#"Commands:
+    help/h - <--
+    exit/e - <--
+    cli - [cl]ear [i]nterrupts
+    ena - [ena]ble interrupts
+    r<0xLEN> - [r]ead memory
+    w<0xBYTE>(,<0bBYTE>...) - [w]rite bytes
+    cw<0xBYTE>,0xLEN - [c]opy [w]rite
+    j - [j]ump to a function pointer
+    a<0xLEN> - [a]dvance pointer
+    b<0xLEN> - [b]acktrack pointer
+    lm - [l]ist [m]arkers
+    m<name> - point to [m]arker
+    g<0xPOS> - [g]oto position"#;
+}
 
 /// Helper method to parse `input`[`offset`..`offset+len`] to a `usize` in `radix`
 #[cfg(debug_assertions)]
@@ -149,9 +154,9 @@ impl HallwayMonitor {
         };
         (0..len * 8).for_each(|offset| {
             let pos = unsafe { ptr.add(offset) };
-            print!("0x{:02x} ", unsafe { *pos });
+            helper_print!("", "", "0x{:02x} ", unsafe { *pos });
             if offset != 0 && (offset + 1) % 8 == 0 {
-                println!("<-- @0x{:x}", pos.addr() + 1);
+                helper_print!("", '\n', "<-- @0x{:x}", pos.addr() + 1);
             }
         });
     }

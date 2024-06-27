@@ -8,8 +8,10 @@
 #![feature(maybe_uninit_uninit_array)]
 #![feature(const_maybe_uninit_uninit_array)]
 #![feature(split_at_checked)]
+#![feature(const_trait_impl)]
+#![feature(effects)]
+#![feature(asm_experimental_arch)]
 
-pub mod console;
 pub mod debug;
 pub mod driver;
 pub mod module;
@@ -19,21 +21,31 @@ pub mod task;
 pub mod types;
 pub mod utils;
 
-use console::set_console;
-use debug::memory::add_marker_manual;
+use core::{alloc::Layout, hint::black_box};
 
 use arduino_hal::default_serial;
+use debug::{console::debug_println, memory::add_marker};
+use task::stack::{jump_to_stack, STACK, STACK_LEN};
 
 #[macro_use]
 extern crate require_unsafe_in_body;
 
 #[arduino_hal::entry]
 fn main() -> ! {
-    unsafe { add_marker_manual("main", __avr_device_rt_main as *const u8) };
+    unsafe { debug::memory::add_marker_manual("main", __avr_device_rt_main as *const u8) };
+
+    add_marker!("stack", STACK);
+    unsafe {
+        jump_to_stack(core::ptr::addr_of!(STACK[0]).add(STACK_LEN) as *const _);
+    }
+
     let peripherals = unsafe { arduino_hal::Peripherals::steal() };
     let pins = arduino_hal::pins!(peripherals);
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
-    set_console(serial);
+    debug::console::set_console(serial);
 
-    loop {}
+    let x = [b'G'; 128];
+    add_marker!("x", x);
+
+    panic!("")
 }

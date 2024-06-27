@@ -1,9 +1,9 @@
 //! Panic handler!
 
 #[cfg(debug_assertions)]
-use crate::debug::interactive::HallwayMonitor;
+use crate::debug::hallway::HallwayMonitor;
 use crate::{
-    console::{println, set_console},
+    debug::console::debug_println,
     shared::{UsbSerial, BAUD_RATE},
 };
 
@@ -17,26 +17,26 @@ pub fn panic(info: &PanicInfo) -> ! {
     let peripherals = unsafe { arduino_hal::Peripherals::steal() };
     let pins = arduino_hal::pins!(peripherals);
     let serial: UsbSerial = default_serial!(peripherals, pins, BAUD_RATE);
-    set_console(serial);
+    crate::debug::console::set_console(serial);
 
     // Print out panic location
     if let Some(message) = info.message() {
-        println!("PANICKED! {}", message.as_str().unwrap_or_default());
+        debug_println!("PANICKED! {}", message.as_str().unwrap_or_default());
     }
     if let Some(loc) = info.location() {
-        println!("PANICKED! {}:{}:{}", loc.file(), loc.line(), loc.column());
+        debug_println!("PANICKED! {}:{}:{}", loc.file(), loc.line(), loc.column());
     }
 
     #[cfg(debug_assertions)]
     unsafe {
-        println!("Enter to start Hallway Monitor...");
-        crate::console::read_line::<1>();
+        debug_println!("Enter to start Hallway Monitor...");
+        crate::debug::console::read_line::<1>();
         HallwayMonitor::new().interactive()
     };
     #[cfg(not(debug_assertions))]
-    println!("Run with debug assertions to start Hallway Monitor.");
+    debug_println!("Run with debug assertions to start Hallway Monitor.");
 
-    println!("Entering busy loop.");
+    debug_println!("Entering busy loop.");
     let mut led = pins.d13.into_output();
     loop {
         led.toggle();
