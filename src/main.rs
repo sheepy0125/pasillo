@@ -23,12 +23,15 @@ pub mod types;
 pub mod utils;
 
 use core::{
+    arch::asm,
     cell::{Cell, RefCell},
+    hint::black_box,
     ptr::NonNull,
 };
 
 use debug::{
     console::debug_println,
+    jump::save_pc,
     memory::{add_marker, add_marker_manual},
 };
 

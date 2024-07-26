@@ -36,7 +36,16 @@ macro_rules! save_pc {
     () => {{
         let msb: u8;
         let lsb: u8;
-        unsafe { core::arch::asm!("rcall .", out("r17") lsb, out("r16") msb) }
+        unsafe {
+            core::arch::asm!(
+                "rcall .",
+                "pop r16",
+                "pop r17",
+                "pop r18",
+                out("r17") msb,
+                out("r18") lsb
+            )
+        };
         ((msb as u16) << 8) | lsb as u16
     }};
 }
