@@ -22,23 +22,16 @@ pub mod task;
 pub mod types;
 pub mod utils;
 
-use core::{
-    arch::asm,
-    cell::{Cell, RefCell},
-    hint::black_box,
-    ptr::NonNull,
-};
+use arduino_hal::default_serial;
+use core::cell::{Cell, RefCell};
 
 use debug::{
-    console::debug_println,
-    jump::save_pc,
-    memory::{add_marker, add_marker_manual},
+    console::{debug_println, trace},
+    memory::add_marker_manual,
 };
-
-use arduino_hal::{default_serial, delay_ms};
 use services::input_reader::{input_reader_task, InputReaderState};
 use task::{
-    interrupt::{millis, millis_init},
+    interrupt::millis_init,
     scheduler::{CooperativeTask, Scheduler},
 };
 
@@ -54,7 +47,7 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(peripherals);
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
     debug::console::set_console(serial);
-    debug_println!("running!");
+    trace!("running!");
 
     // Enable interrupts
     unsafe {

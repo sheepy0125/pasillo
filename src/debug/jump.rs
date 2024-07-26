@@ -1,7 +1,5 @@
 //! Stack locations for tasks
 
-use core::arch::asm;
-
 const DEFAULT_STACK_POS: usize = 0x21ff;
 
 /// Set the top of the stack to `location`.

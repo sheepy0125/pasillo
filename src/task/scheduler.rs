@@ -1,13 +1,13 @@
-use crate::{
-    debug::{console::debug_println, jump::save_pc},
-    task::state::CooperativeState,
-};
+use crate::{debug::console::debug_println, task::state::CooperativeState};
 
 use core::{
     cell::{Cell, RefCell, RefMut},
     hint::black_box,
     ptr::NonNull,
+    sync::atomic::AtomicBool,
 };
+
+pub static CONTINUING_FROM_YIELD: AtomicBool = AtomicBool::new(false);
 
 pub struct CooperativeTask<S: CooperativeState> {
     pub cooperative_task: fn(&Self, RefMut<dyn CooperativeState>) -> Cooperation,
@@ -25,30 +25,39 @@ pub enum Cooperation<T = ()> {
     Done,
 }
 
-/// Save the program counter and
+/// Save the program counter into `task` and return a [`Cooperation::Working`].
 macro_rules! yield_here {
     ($task:expr, $work:expr) => {
         let pc = crate::debug::jump::save_pc!();
-        debug_println!("yielding pc: 0x{:x}", pc);
-        unsafe {
-            $task.update_program_counter(Some(core::ptr::NonNull::new_unchecked(
-                (pc + 30) as *mut u16,
-            )))
+        // When we resume a task, we'll resume from right here.
+        // We only want to return when we haven't yielded from here yet.
+        if !crate::task::scheduler::CONTINUING_FROM_YIELD
+            .load(core::sync::atomic::Ordering::Relaxed)
+        {
+            // no [`core::sync::atomic::AtomicBool::fetch_and`] on AVR
+            crate::task::scheduler::CONTINUING_FROM_YIELD
+                .store(false, core::sync::atomic::Ordering::Relaxed);
+            crate::debug::console::trace!("yield_here: program counter saved as 0x{:x}", pc);
+            unsafe {
+                $task
+                    .update_program_counter(Some(core::ptr::NonNull::new_unchecked(pc as *mut u16)))
+            }
+            return Cooperation::Working($work);
         }
-        return Cooperation::Working($work);
     };
 }
 pub(crate) use yield_here;
 
+/// Resume from a yielded program counter
 macro_rules! cooperative_task {
     ($resume_pc:expr) => {
-        debug_println!(
-            "resuming from 0x{:x}",
-            $resume_pc.map(|pc| pc.addr().into()).unwrap_or(0_usize)
-        );
-        arduino_hal::delay_ms(100);
         if let Some(pc) = $resume_pc {
-            debug_println!("resume pc: 0x{:x}", pc.as_ptr().addr());
+            crate::debug::console::trace!(
+                "cooperative_task: resuming from 0x{:x}",
+                pc.as_ptr().addr()
+            );
+            crate::task::scheduler::CONTINUING_FROM_YIELD
+                .store(true, core::sync::atomic::Ordering::Relaxed);
             unsafe { crate::debug::jump::jump_pc!(pc.as_ptr()) }
         }
     };
