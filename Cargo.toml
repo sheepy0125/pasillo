@@ -41,7 +41,7 @@ opt-level = "z"
 
 [profile.release]
 panic = "abort"
-debug-assertions = false
+debug-assertions = true
 codegen-units = 1
 debug = false
 lto = false

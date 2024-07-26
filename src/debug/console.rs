@@ -3,8 +3,11 @@
 
 use crate::{shared::UsbSerial, types::string::PStackStr};
 
-use core::{cell::RefCell, str::FromStr as _};
 use avr_device::interrupt::{self, Mutex};
+use core::{cell::RefCell, str::FromStr as _};
+
+/// Loop Rx to Tx
+const ECHO: bool = true;
 
 pub static CONSOLE: Mutex<RefCell<Option<UsbSerial>>> = interrupt::Mutex::new(RefCell::new(None));
 
@@ -37,7 +40,9 @@ pub unsafe fn read_line<const LEN: usize>() -> PStackStr<LEN> {
             ret.len += 1;
         }
     });
-    helper_print!("", "\n", "{}", ret.as_ref());
+    if ECHO {
+        helper_print!("", "\n", "{}", ret.as_ref());
+    }
     ret
 }
 
@@ -73,10 +78,10 @@ macro_rules! debug_print {
 }
 
 #[allow(unused_imports)]
-pub(crate) use helper_print;
+pub(crate) use debug_print;
 #[allow(unused_imports)]
 pub(crate) use debug_println;
 #[allow(unused_imports)]
-pub(crate) use debug_print;
+pub(crate) use helper_print;
 #[allow(unused_imports)]
 pub(crate) use trace;

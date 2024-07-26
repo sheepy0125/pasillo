@@ -2,6 +2,8 @@
 
 use core::mem::MaybeUninit;
 
+/// Transmute without validating equal sizes
+///
 /// [`core::mem::transmute`] ensures that `sizeof::<Src>()` == `sizeof::<Dst>()`. In the context of
 /// const generics (ref. https://github.com/rust-lang/rust/issues/47966), this cannot be guaranteed.
 ///
@@ -18,7 +20,10 @@ where
     destination
 }
 
-/// Unsafely transmutes a [`MaybeUninit::uninit_array`], masking the [`MaybeUninit`]s.
+/// Unsafely decomposes a [`MaybeUninit::uninit_array`], masking the [`MaybeUninit`]s.
+///
+/// # Safety
+/// Indexing past the "length" will result in UB.
 #[require_unsafe_in_body]
 #[inline(never)]
 pub unsafe fn decompose_uninit_array<T, const LEN: usize>(
@@ -26,3 +31,16 @@ pub unsafe fn decompose_uninit_array<T, const LEN: usize>(
 ) -> [T; LEN] {
     unsafe { unchecked_size_transmute::<_, [T; LEN]>(array) }
 }
+
+macro_rules! low {
+    ($location:expr) => {
+        (($location as *const u8).addr() as u16 & u8::MAX as u16) as i8
+    };
+}
+pub(crate) use low;
+macro_rules! high {
+    ($location:expr) => {
+        (($location as *const u8).addr() >> 8) as i8
+    };
+}
+pub(crate) use high;

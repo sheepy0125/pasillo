@@ -31,12 +31,10 @@ pub unsafe fn add_marker_manual(_: &'static str, _: *const u8) {}
 macro_rules! add_marker {
     ($name:expr, $marker:expr) => {
         #[allow(unused_unsafe)] // static mut
-        black_box(unsafe { $marker });
+        core::hint::black_box(&unsafe { $marker });
+        #[allow(static_mut_refs)] // static mut
         unsafe {
-            crate::debug::memory::add_marker_manual(
-                $name,
-                core::ptr::addr_of!($marker) as *const u8,
-            )
+            crate::debug::memory::add_marker_manual($name, &$marker as *const _ as *const u8)
         }
     };
 }

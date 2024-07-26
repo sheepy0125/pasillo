@@ -20,7 +20,7 @@ impl<const STACK_STR_LEN: usize> PError<STACK_STR_LEN> {
     }
 }
 unsafe impl<const STACK_STR_LEN: usize> Magic<4> for PError<STACK_STR_LEN> {
-    const MAGIC: [u8; 4] = [b'e', b'r', b'r', b'!'];
+    const MAGIC: [u8; 4] = *b"err!";
 }
 
 #[repr(u8)]

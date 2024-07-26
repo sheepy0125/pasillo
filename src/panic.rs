@@ -10,10 +10,9 @@ use crate::{
 use arduino_hal::{default_serial, delay_ms};
 use core::panic::PanicInfo;
 
-/// Panic and run [`HallwayMonitor`].
+/// Panic and run [`HallwayMonitor`] in debug mode.
 #[panic_handler]
 pub fn panic(info: &PanicInfo) -> ! {
-    // Avoid race condition with the serial handle
     let peripherals = unsafe { arduino_hal::Peripherals::steal() };
     let pins = arduino_hal::pins!(peripherals);
     let serial: UsbSerial = default_serial!(peripherals, pins, BAUD_RATE);

@@ -15,7 +15,7 @@ pub struct PStackStr<const LEN: usize> {
 }
 
 unsafe impl<const STR_LEN: usize> Magic<4> for PStackStr<STR_LEN> {
-    const MAGIC: [u8; 4] = [u8::MAX, b's', b't', b'r'];
+    const MAGIC: [u8; 4] = *b"sstr";
 }
 
 impl<const LEN: usize> AsRef<str> for PStackStr<LEN> {

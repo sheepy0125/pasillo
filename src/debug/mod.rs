@@ -1,5 +1,6 @@
 //! Debug utilities.
 
-pub mod hallway;
-pub mod memory;
 pub mod console;
+pub mod hallway;
+pub mod jump;
+pub mod memory;

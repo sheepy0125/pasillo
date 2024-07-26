@@ -1,7 +1,7 @@
 //! An interactive "debugger" or "monitor," [`HallwayMonitor`], meant for debug scenarios to look
 //! through memory.
 
-use crate::debug::console::helper_print;
+use crate::{debug::console::helper_print, debug::jump::call};
 #[cfg(debug_assertions)]
 use crate::{
     debug::console::{debug_print as print, debug_println as println, read_line},
@@ -107,8 +107,7 @@ impl HallwayMonitor {
                 },
                 _jump if input.starts_with('j') => {
                     if let Some(ptr) = self.pos {
-                        let trampoline: fn() -> ! = unsafe { core::mem::transmute(ptr) };
-                        trampoline();
+                        call(ptr as *const _)
                     }
                 }
                 _forward if input.starts_with('a') => {

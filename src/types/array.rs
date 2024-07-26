@@ -25,7 +25,7 @@ unsafe impl<T, const LEN: usize> Magic<4> for PStackArrUnchecked<T, LEN>
 where
     T: Sized,
 {
-    const MAGIC: [u8; 4] = [u8::MAX, b'a', b'r', b'y'];
+    const MAGIC: [u8; 4] = *b"sarr";
 }
 
 impl<T, const LEN: usize> PStackArrUnchecked<T, LEN>
