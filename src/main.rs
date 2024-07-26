@@ -22,13 +22,22 @@ pub mod task;
 pub mod types;
 pub mod utils;
 
+use core::{
+    cell::{Cell, RefCell},
+    ptr::NonNull,
+};
+
 use debug::{
     console::debug_println,
     memory::{add_marker, add_marker_manual},
 };
 
 use arduino_hal::{default_serial, delay_ms};
-use task::interrupt::{millis, millis_init};
+use services::input_reader::{input_reader_task, InputReaderState};
+use task::{
+    interrupt::{millis, millis_init},
+    scheduler::{CooperativeTask, Scheduler},
+};
 
 #[macro_use]
 extern crate require_unsafe_in_body;
@@ -42,6 +51,7 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(peripherals);
     let serial = default_serial!(peripherals, pins, shared::BAUD_RATE);
     debug::console::set_console(serial);
+    debug_println!("running!");
 
     // Enable interrupts
     unsafe {
@@ -49,13 +59,13 @@ fn main() -> ! {
         avr_device::interrupt::enable();
     }
 
-    debug_println!("hello");
-    debug_println!("world");
-
-    for _ in 0..10 {
-        delay_ms(1000);
-        debug_println!("millis: {}", millis());
-    }
+    let input_task = CooperativeTask {
+        cooperative_task: input_reader_task,
+        state: RefCell::new(InputReaderState::default()),
+        program_counter: Cell::new(None),
+    };
+    Scheduler::schedule(&input_task);
+    Scheduler::schedule(&input_task);
 
     panic!("init ended")
 }

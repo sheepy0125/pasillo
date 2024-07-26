@@ -30,12 +30,24 @@ macro_rules! jump_pc {
 }
 #[allow(unused_imports)]
 pub(crate) use jump_pc;
-
+/// Find the program counter.
+#[allow(unused_macros)]
+macro_rules! save_pc {
+    () => {{
+        let msb: u8;
+        let lsb: u8;
+        unsafe { core::arch::asm!("rcall .", out("r17") lsb, out("r16") msb) }
+        ((msb as u16) << 8) | lsb as u16
+    }};
+}
+#[allow(unused_imports)]
+pub(crate) use save_pc;
 /// Call a function, resetting the stack pointer to its default position.
 #[allow(unused)]
+#[require_unsafe_in_body]
 pub unsafe fn call(location: *const fn() -> ()) {
     // Reset the stack pointer to its default position
-    jump_to_stack!(core::ptr::from_exposed_addr(DEFAULT_STACK_POS));
+    unsafe { jump_to_stack!(core::ptr::from_exposed_addr(DEFAULT_STACK_POS)) }
     // Jump to function pointer
-    jump_pc!(location);
+    unsafe { jump_pc!(location) }
 }

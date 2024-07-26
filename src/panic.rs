@@ -17,6 +17,7 @@ pub fn panic(info: &PanicInfo) -> ! {
     let pins = arduino_hal::pins!(peripherals);
     let serial: UsbSerial = default_serial!(peripherals, pins, BAUD_RATE);
     crate::debug::console::set_console(serial);
+    delay_ms(100);
 
     // Print out panic location
     if let Some(message) = info.message() {
